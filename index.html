@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Socket Chat</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div id="userFormArea" class="row">
+            <div class="col-md-12">
+                <form action="" class="" id="userForm">
+                    <div class="form-group">
+                        <label for="">Enter Username</label>
+                        <input id="username" class="form-control"></input>
+                        <br />
+                        <input type="submit" class="btn btn-primary" value="Login">
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="messageArea">
+            <div class="row">
+                <!--chat area-->
+                <div class="col-md-8">
+                    <div class="chat" id="chat"></div>
+
+                </div>
+                <!--sidebar-->
+                <div class="col-md-4" id="userList">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3> Users</h3>
+                            <ul class="list-group" id="users">
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer" id="footer">
+        <form action="" class="row" id="messageForm">
+            <div class="form-group col-md-8">
+                <label for="">Enter Message</label>
+                <input id="message" class="form-control"></input>
+
+            </div>
+            <input type="submit" class="btn btn-primary col-md-4" value="Send Message">
+        </form>
+    </div>
+
+    <script>
+        $(function () {
+            var socket = io.connect();
+            var $messageForm = $('#messageForm');
+            var $message = $('#message');
+            var $chat = $('#chat');
+            var $messageArea = $('#messageArea');
+            var $footer = $('#footer');
+            var $userFormArea = $('#userFormArea');
+            var $userForm = $('#userForm');
+            var $users = $('#users');
+            var $username = $('#username');
+
+
+
+            $messageForm.submit(function (e) {
+                e.preventDefault();
+                console.log('Submitted');
+                socket.emit('send message', $message.val());
+                $message.val('');
+            });
+
+
+            socket.on('new message', function (data) {
+                $chat.append('<div class="card"><div class="card-body"><strong>' + data.user +
+                    '</strong>: ' + data.msg + '</div></div>');
+            });
+
+            $userForm.submit(function (e) {
+                e.preventDefault();
+                console.log('Submitted username');
+                socket.emit('new user', $username.val(), function (data) {
+                    if (data) {
+                        $userFormArea.hide();
+                        $messageArea.show();
+                        $footer.show();
+                    }
+                });
+                $username.val('');
+            });
+
+            socket.on('get users', function (data) {
+                var html = '';
+                for (i = 0; i < data.length; i++) {
+                    html += '<li class="list-group-item">' + data[i] + '</li>';
+                }
+                $users.html(html);
+            })
+
+        });
+    </script>
+
+</body>
+
+</html>
